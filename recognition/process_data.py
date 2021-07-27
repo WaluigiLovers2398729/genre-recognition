@@ -6,6 +6,14 @@
 # Note: A 1 GB dataset is too big to save in the git repository both before and after processing
 # the data, so we're storing it locally on our own computers while working on this step
 
+# Git doesn't allow the saving of empty folders so set them up like this:
+# --recognition
+# ----data
+# ------audiosamples
+# ------raw
+# ------spectograms
+# ------testing_data
+
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from pydub import AudioSegment
 import matplotlib.pyplot as plt
