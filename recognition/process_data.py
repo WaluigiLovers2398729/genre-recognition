@@ -14,6 +14,11 @@
 # ------spectograms
 # ------testing_data
 
+# If processing runs into an error, remember to delete files to try again
+# Also, if anyone has extra time maybe make a function that automatically does this
+
+# Jazz files in the gtzan dataset seem to have a running issue, leaving out for now
+
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from pydub import AudioSegment
 import matplotlib.pyplot as plt
@@ -22,11 +27,11 @@ import librosa
 import shutil
 import random
 import os 
-genres = ('blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock')
+genres = ('blues', 'classical', 'country', 'disco', 'hiphop', 'metal', 'pop', 'reggae', 'rock')
 
 def genre_folders():
     """
-    creates 10 genre folders in each data directory
+    creates 9 genre folders in each data directory
     
     Parameters
     ----------
@@ -39,21 +44,18 @@ def genre_folders():
     # iterate to make genre folders in each main directory
     for g in genres:
         # make genre folders in audiosamples directory
-        path_audio = os.path.join("/recognition/data/audiosamples", f"{g}")
+        path_audio = os.path.join("recognition/data/audiosamples", f"{g}")
         os.makedirs(path_audio)
         # make genre folders in spectograms directory
-        path_audio = os.path.join("/recognition/data/spectograms", f"{g}")
+        path_audio = os.path.join("recognition/data/spectograms", f"{g}")
         os.makedirs(path_audio)
-        # make genre folders in training directory
-        path_train = os.path.join("/recognition/data/training", f"{g}")
+        # make genre folders in testing data directory
+        path_train = os.path.join("recognition/data/testing_data", f"{g}")
         os.makedirs(path_train)
-        # make genre folders in testing directory
-        path_test = os.path.join("/recognition/data/testing", f"{g}")
-        os.makedirs(path_test)
 
 def split_and_save():
     """
-    splits 1000 thirty-second clips to 6000 five-second clips and saves to /audiosamples/
+    splits 900 thirty-second clips to 5400 five-second clips and saves to /audiosamples/
     
     Parameters
     ----------
@@ -69,9 +71,9 @@ def split_and_save():
         # print current genre
         print(g)
         # iterate through a list of the 100 sound files in each genre 
-        for filename in os.listdir(os.path.join("/recognition/data/raw/genres_original", f"{g}")):
+        for filename in os.listdir(os.path.join("recognition/data/raw/genres_original", f"{g}")):
             # sound file path
-            song = os.path.join(f"/recognition/data/raw/genres_original/{g}", f"{filename}")
+            song = os.path.join(f"recognition/data/raw/genres_original/{g}", f"{filename}")
             i = i + 1
             for w in range(0, 6):
                 # calculations for 5 second splits
@@ -83,9 +85,9 @@ def split_and_save():
                 # slices wav sound file
                 new = newAudio[t1:t2]
                 # save new sound file in audiosamples folder
-                # (i) corresponds to which respective 30-second slice among all 1000 original songs
+                # (i) corresponds to which respective 30-second slice among all 900 original songs
                 # (w) corresponds to which 5-second slice among the six from the original 30-seconds
-                new.export(f"/recognition/data/audiosamples/{g}/{g+str(i)+str(w)}.wav", format="wav")
+                new.export(f"recognition/data/audiosamples/{g}/{g+str(i)+str(w)}.wav", format="wav")
 
 def to_mel_spectograms():
     """
@@ -104,10 +106,10 @@ def to_mel_spectograms():
         i = 0
         # print current genre
         print(g)
-        # iterate through the newly sliced 6000 five-second sound files
-        for filename in os.listdir(os.path.join("/recognition/data/audiosamples", f"{g}")):
+        # iterate through the newly sliced 5400 five-second sound files
+        for filename in os.listdir(os.path.join("recognition/data/audiosamples", f"{g}")):
             # sound file path
-            song = os.path.join(f"/recognition/data/raw/genres_original/{g}", f"{filename}")
+            song = os.path.join(f"recognition/data/raw/genres_original/{g}", f"{filename}")
             i = i + 1
             # load in 5 seconds of audio for this sound file
             y, sr = librosa.load(song, duration=5)
@@ -120,12 +122,12 @@ def to_mel_spectograms():
             # convert power spectogram to decibel units using mel-spectogram and reference 
             # value (scales amplitude to max in mels), then displays data
             p = plt.imshow(librosa.power_to_db(mels, ref=np.max))
-            # matplotlib: save to directory as png after figure is displayed
-            plt.savefig(f"/recognition/data/spectograms/{g}/{g+str(i)}.png")
+            # save to directory as png after figure is displayed
+            plt.savefig(f"recognition/data/spectograms/{g}/{g+str(i)}.png")
 
 def create_sets():
     """
-    moves 25% of the 6000 spectograms to /testing_data/ with the remaining 75% being "training data"
+    moves 25% of the 5400 spectograms to /testing_data/ with the remaining 75% being "training data"
     
     Parameters
     ----------
@@ -137,17 +139,17 @@ def create_sets():
     """
     # files will be moved from this folder to the testing_data folder
     # in other words, spectograms is our "training data"
-    directory = "/recognition/data/spectograms/"
+    directory = "recognition/data/spectograms/"
     # iterate through genres
     for g in genres:
         # list of spectogram files for this genre
         filenames = os.listdir(os.path.join(directory, f"{g}"))
         # randomly shuffle
         random.shuffle(filenames)
-        # 150 random spectograms from each genre, 1500 in total from ten genres
-        # 1500 is 25% of 6000 (standard size for testing data)
+        # 150 random spectograms from each genre, 1350 in total from nine genres
+        # 1350 is 25% of 5400 (standard size for testing data)
         test_files = filenames[0:150]
     # iterate through test_files
     for f in test_files:
         # move them into testing_data
-        shutil.move(directory + f"{g}"+ "/" + f, "/recognition/data/testing_data/" + f"{g}")
+        shutil.move(directory + f"{g}"+ "/" + f, "recognition/data/testing_data/" + f"{g}")
