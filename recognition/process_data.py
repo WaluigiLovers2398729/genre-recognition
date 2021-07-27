@@ -6,18 +6,21 @@
 # Note: A 1 GB dataset is too big to save in the git repository both before and after processing
 # the data, so we're storing it locally on our own computers while working on this step
 
-# Git doesn't allow the saving of empty folders so set them up like this:
+# Git doesn't allow the saving of empty folders so manually set them up like this:
 # --recognition
 # ----data
 # ------audiosamples
 # ------raw
-# ------spectograms
+# ------spectrograms
 # ------testing_data
 
 # If processing runs into an error, remember to delete files to try again
 # Also, if anyone has extra time maybe make a function that automatically does this
 
-# Jazz files in the gtzan dataset seem to have a running issue, leaving out for now
+# Jazz files in the GTZAN dataset seem to have a running issue, leaving out for now
+
+# Processing takes a really long time to run but the sample size will help boost our accuracy,
+# i'll upload the files to a cloud drive once they finish loading so others can test
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from pydub import AudioSegment
@@ -31,7 +34,7 @@ genres = ('blues', 'classical', 'country', 'disco', 'hiphop', 'metal', 'pop', 'r
 
 def genre_folders():
     """
-    creates 9 genre folders in each data directory
+    [WORKING] creates 9 genre folders in each data directory
     
     Parameters
     ----------
@@ -46,8 +49,8 @@ def genre_folders():
         # make genre folders in audiosamples directory
         path_audio = os.path.join("recognition/data/audiosamples", f"{g}")
         os.makedirs(path_audio)
-        # make genre folders in spectograms directory
-        path_audio = os.path.join("recognition/data/spectograms", f"{g}")
+        # make genre folders in spectrograms directory
+        path_audio = os.path.join("recognition/data/spectrograms", f"{g}")
         os.makedirs(path_audio)
         # make genre folders in testing data directory
         path_train = os.path.join("recognition/data/testing_data", f"{g}")
@@ -55,7 +58,7 @@ def genre_folders():
 
 def split_and_save():
     """
-    splits 900 thirty-second clips to 5400 five-second clips and saves to /audiosamples/
+    [WORKING] splits 900 thirty-second clips to 5400 five-second clips and saves to /audiosamples/
     
     Parameters
     ----------
@@ -89,9 +92,9 @@ def split_and_save():
                 # (w) corresponds to which 5-second slice among the six from the original 30-seconds
                 new.export(f"recognition/data/audiosamples/{g}/{g+str(i)+str(w)}.wav", format="wav")
 
-def to_mel_spectograms():
+def to_mel_spectrograms():
     """
-    converts the split 6000 five-second clips to mel spectograms and saves to /spectograms/
+    [WORKING] converts the split 5400 five-second clips to mel spectrograms and saves to /spectrograms/
     
     Parameters
     ----------
@@ -109,25 +112,25 @@ def to_mel_spectograms():
         # iterate through the newly sliced 5400 five-second sound files
         for filename in os.listdir(os.path.join("recognition/data/audiosamples", f"{g}")):
             # sound file path
-            song = os.path.join(f"recognition/data/raw/genres_original/{g}", f"{filename}")
+            song = os.path.join(f"recognition/data/audiosamples/{g}", f"{filename}")
             i = i + 1
             # load in 5 seconds of audio for this sound file
             y, sr = librosa.load(song, duration=5)
-            # use time-series and sampling-rate to get mel-spectogram as np array
-            mels = librosa.feature.melspectogram(y=y, sr=sr)
+            # use time-series and sampling-rate to get mel-spectrogram as np array
+            mels = librosa.feature.melspectrogram(y=y, sr=sr)
             # creates a new "Figure" (for displaying data)
             fig = plt.Figure()
             # manually attach a "Canvas" to the "Figure" (for displaying data)
             canvas = FigureCanvas(fig)
-            # convert power spectogram to decibel units using mel-spectogram and reference 
+            # convert power spectrogram to decibel units using mel-spectrogram and reference 
             # value (scales amplitude to max in mels), then displays data
             p = plt.imshow(librosa.power_to_db(mels, ref=np.max))
             # save to directory as png after figure is displayed
-            plt.savefig(f"recognition/data/spectograms/{g}/{g+str(i)}.png")
+            plt.savefig(f"recognition/data/spectrograms/{g}/{g+str(i)}.png")
 
 def create_sets():
     """
-    moves 25% of the 5400 spectograms to /testing_data/ with the remaining 75% being "training data"
+    [WORKING] moves 25% of the 5400 spectrograms to /testing_data/ with the remaining 75% being "training data"
     
     Parameters
     ----------
@@ -138,18 +141,19 @@ def create_sets():
     None
     """
     # files will be moved from this folder to the testing_data folder
-    # in other words, spectograms is our "training data"
-    directory = "recognition/data/spectograms/"
+    # in other words, spectrograms is our "training data"
+    directory = "recognition/data/spectrograms/"
     # iterate through genres
     for g in genres:
-        # list of spectogram files for this genre
+        # list of spectrogram files for this genre
         filenames = os.listdir(os.path.join(directory, f"{g}"))
         # randomly shuffle
         random.shuffle(filenames)
-        # 150 random spectograms from each genre, 1350 in total from nine genres
+        # 150 random spectrograms from each genre, 1350 in total from nine genres
         # 1350 is 25% of 5400 (standard size for testing data)
         test_files = filenames[0:150]
     # iterate through test_files
     for f in test_files:
         # move them into testing_data
         shutil.move(directory + f"{g}"+ "/" + f, "recognition/data/testing_data/" + f"{g}")
+        
