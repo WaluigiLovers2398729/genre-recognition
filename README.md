@@ -36,14 +36,12 @@ GTZAN Dataset: https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-c
     * 100 thirty-second audio files for each genre
     * 100 respective mel spectrograms for each of those audio files
 
-
 THINGS TO MAKE PROJECT UNIQUE
     * Combining with wahzam + visualizer so a single song input could output the song name, song genre, and a visual representation → and maybe add a ui and name it something user-friendly like tune-
         * 1) Genre Classification + Simple Audio Input
         * 2) Swap simple audio input for wahzam song recognition
         * 3) Add live visualizer for the inputted song
         * 4) Add a nice UI 
-
 
 process_data.py: DATA 
     * Load in dataset
@@ -61,7 +59,6 @@ process_data.py: DATA
         * Will have to keep in mind the dimensionality of this, 0 pad to be compatible with convolutions
         
     * We save the data locally, retrieve using ImageDataGenerator for usage with batches 
-    
 
 model.py: MODEL
     * CNN: 5 convolutional layers 
@@ -69,11 +66,9 @@ model.py: MODEL
         * 1 dropout layer (to avoid overfitting) 
         * dense layer (with softmax activation)
 
-
 training.py: TRAINING
     * Will most likely make use of (f1) functions from reading since we’re working with directory files unlike in cogworks
     
-
 main_functions.py: RECOGNITION
     * input song
 

@@ -107,7 +107,7 @@ def to_mel_spectrograms():
     None
     """
     # iterate through genres
-    for g in ('reggae', 'rock'): # REMEMBER TO CHANGE BACK TO ALL GENRES
+    for g in ('rock',): # REMEMBER TO CHANGE BACK TO ALL GENRES
         i = 0
         # print current genre
         print(g)
@@ -147,6 +147,8 @@ def create_sets():
     directory = "recognition/data/spectrograms/"
     # iterate through genres
     for g in genres:
+        # print current genre
+        print(g)
         # list of spectrogram files for this genre
         filenames = os.listdir(os.path.join(directory, f"{g}"))
         # randomly shuffle
@@ -154,8 +156,8 @@ def create_sets():
         # 150 random spectrograms from each genre, 1350 in total from nine genres
         # 1350 is 25% of 5400 (standard size for testing data)
         test_files = filenames[0:150]
-    # iterate through test_files
-    for f in test_files:
-        # move them into testing_data
-        shutil.move(directory + f"{g}"+ "/" + f, "recognition/data/testing_data/" + f"{g}")
+        # iterate through test_files
+        for f in test_files:
+            # move them into testing_data
+            shutil.move(directory + f"{g}"+ "/" + f, "recognition/data/testing_data/" + f"{g}")
         

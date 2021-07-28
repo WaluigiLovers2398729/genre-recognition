@@ -32,7 +32,7 @@ def train():
     # training: fits the model on data yielded batch-by-batch by a python generator
     history = model.fit_generator(train_generator, epochs=70, validation_data=valid_generator)
     return history
-    
+
 """
 ALTERNATIVE CODE (PYTORCH)
 --------------------------
@@ -68,7 +68,7 @@ def get_f1(y_true, y_pred):
     return f1_val
 
 #normal accuracy
-def accuracy(predictions, truth):
+def accuracy(predictions, truthdata):
     Returns the mean classification accuracy for a batch of predictions.
     
     Parameters
@@ -82,13 +82,17 @@ def accuracy(predictions, truth):
     Returns
     -------
     float
+    
+    truth = []
+    for i in truthdata:
+       truth.append(np.argmax(i)) 
     return np.mean(np.argmax(predictions, axis=1) == truth) # <COGLINE>
 
 # TRAINING SETUP
 model = Model()
 optim = Adam(learning_rate=0.00005)
 batch_size = 100
-epochs = 20
+epochs = 20                      #recommended 70
 
 
 for epoch_cnt in range(epochs):
@@ -110,7 +114,7 @@ for epoch_cnt in range(epochs):
         #truth = y_train[batch_indices]
 
         # compute the loss associated with our predictions(use softmax_cross_entropy)
-        loss = cross_entropy(prediction, labels) #pytorchs implementation isnt hte same as normal categorical cross entropy i dont think, im looking into it
+        loss = cross_entropy(prediction, labels) 
 
         # back-propagate through your computational graph through your loss
         loss.backward()
@@ -154,10 +158,42 @@ optim = Adam(learning_rate = 0.0005)
 plotter.plot()
 
 ...
-
 one_hots = {"blues":[1,0,0,0,0,0,0,0,0], "classical":[0,1,0,0,0,0,0,0,0], "country":[0,0,1,0,0,0,0,0,0], "disco":[0,0,0,1,0,0,0,0,0], "hiphop":[0,0,0,0,1,0,0,0,0], "metal":[0,0,0,0,0,1,0,0,0], "metal":[0,0,0,0,0,1,0,0,0], "pop":[0,0,0,0,0,0,1,0,0], "reggae":[0,0,0,0,0,0,0,1,0],"rock":[0,0,0,0,0,0,0,0,1]}
+
+#read in complete labels list here
 
 onehotslist = []
 for label in labels_list:
     onehotslist.append(one_hots[label]) 
+
+split = int(len(labels)*0.5)
+
+y_train = onehotslist[:split]
+y_test = onehotslist[split:]
+
+
+#how to get the array of img data (hopefully) - all images are same dimensions so should work
+
+from pathlib import Path
+from PIL import Image
+import os, shutil
+from os import listdir
+
+images_dir = Path('C:\\Users\\HP\\Desktop\\XXXXXXXXXXXXXXXXX\\images').expanduser()
+
+X_image_array=[]
+for fname in listdir(images_dir):
+    fpath = os.path.join(images_dir, fname)
+    im = Image.open(fpath)
+    X_image_array.append(im)
+
+x_data = []
+for x in range(len(X_image_array)):
+    X_image=np.array(X_image_array[x],dtype='uint8')
+    x_data.append(X_image)
+np.stack(x_data)                                                    #will output a shape (A, B, C, D)  - A: number of images, B:len, C: width, D:color channels 
+
+x_train = x_data[:split]       #train/test split
+x_test = x_data[split:]
+
 """

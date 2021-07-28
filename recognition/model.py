@@ -30,7 +30,7 @@ valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=
 # use the following if testing model & training with smaller samples:
 # Note: manually copy a fraction of training/validation data to respective folders
 # NORMAL: spectrograms (5400) / testing_data (5400) / genres (600)
-# SMALLER: spectrograms (540) / testing_data (540) / genres (60)
+# SMALLER: temp_train (540) / temp_valid (540) / genres (60)
 
 train_dir = "recognition/data/temp/temp_train/"
 train_datagen = ImageDataGenerator(rescale=1./255)
@@ -103,6 +103,8 @@ import torch.nn as nn
 import torch
 relu = nn.functional.relu
 softmax = nn.functional.softmax
+
+#might not work on shape (1,288,432,4)
 
 class Model(nn.Module):
 
