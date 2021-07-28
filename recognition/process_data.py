@@ -14,13 +14,15 @@
 # ------spectrograms
 # ------testing_data
 
-# If processing runs into an error, remember to delete files to try again
-# Also, if anyone has extra time maybe make a function that automatically does this
+# Note: If processing runs into an error, remember to delete files to try again
 
-# Jazz files in the GTZAN dataset seem to have a running issue, leaving out for now
+# Note: Jazz files in the GTZAN dataset seem to have a running issue, leaving out for now
 
-# Processing takes a really long time to run but the sample size will help boost our accuracy,
-# i'll upload the files to a cloud drive once they finish loading so others can test
+# Note: Processing takes a really long time to run but the sample size will help boost our accuracy,
+# I'll upload the files to a cloud drive once they finish loading so others can test
+
+# Note: Spectrogram step works much faster at the beginning of the function and progressively slows down,
+# converting a single genre at a time before restarting the kernel and repeating is the current best way
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from pydub import AudioSegment
@@ -105,7 +107,7 @@ def to_mel_spectrograms():
     None
     """
     # iterate through genres
-    for g in genres:
+    for g in ('metal', 'pop', 'reggae', 'rock'): # REMEMBER TO CHANGE BACK TO ALL GENRES
         i = 0
         # print current genre
         print(g)
