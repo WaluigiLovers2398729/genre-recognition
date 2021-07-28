@@ -107,7 +107,7 @@ def to_mel_spectrograms():
     None
     """
     # iterate through genres
-    for g in ('metal', 'pop', 'reggae', 'rock'): # REMEMBER TO CHANGE BACK TO ALL GENRES
+    for g in ('reggae', 'rock'): # REMEMBER TO CHANGE BACK TO ALL GENRES
         i = 0
         # print current genre
         print(g)
