@@ -1,4 +1,5 @@
 # Genre-Recognition
+# Note: We might want to relabel this as genre classification/detection for a more accurate description (also give it a catchy name)
 
 Simple Python Project Template
 
