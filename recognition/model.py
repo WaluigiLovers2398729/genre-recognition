@@ -14,17 +14,17 @@ train_dir = "recognition/data/spectrograms/"
 train_datagen = ImageDataGenerator(rescale=1./255)
 # navigates to directory and generates batches of augmented data
 #   target_size: dimensions to resize images (288, 432)
-#   color_mode: color channels of images (rgba is 4 channels)
+#   color_mode: color channels of images (rgb is 4 channels)
 #   class_mode: type of label arrays returned (categorical is 2D one-hot encoded labels)
 #   batch_size: size of batches of data (128)
 # returns iterable yielding tuples of (x, y), where x is np array containing 
 # batch of images and y is np array containing respective batch of labels
-train_generator = train_datagen.flow_from_directory(train_dir, target_size=(288,432), color_mode="rgba", class_mode='categorical', batch_size=128)
+train_generator = train_datagen.flow_from_directory(train_dir, target_size=(288,432), color_mode="rgb", class_mode='categorical', batch_size=128)
 
 # repeat same process for validation data (testing_data)
 validation_dir = "recognition/data/testing_data/"
 valid_datagen = ImageDataGenerator(rescale=1./255)
-valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=(288,432), color_mode='rgba', class_mode='categorical', batch_size=128)
+valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=(288,432), color_mode='rgb', class_mode='categorical', batch_size=128)
 
 """
 # use the following if testing model & training with smaller samples:
@@ -33,13 +33,13 @@ valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=
 # SMALLER: temp_train (540) / temp_valid (540) / genres (60)
 train_dir = "recognition/data/temp/temp_train/"
 train_datagen = ImageDataGenerator(rescale=1./255)
-train_generator = train_datagen.flow_from_directory(train_dir, target_size=(288,432), color_mode="rgba", class_mode='categorical', batch_size=128)
+train_generator = train_datagen.flow_from_directory(train_dir, target_size=(288,432), color_mode="rgb", class_mode='categorical', batch_size=128)
 validation_dir = "recognition/data/temp/temp_valid/"
 valid_datagen = ImageDataGenerator(rescale=1./255)
-valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=(288,432), color_mode='rgba', class_mode='categorical', batch_size=128)
+valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=(288,432), color_mode='rgb', class_mode='categorical', batch_size=128)
 """
 
-def GenreModel(input_shape=(288, 432, 4), classes=9):
+def GenreModel(input_shape=(288, 432, 3), classes=9):
     """
     docstring
     """
@@ -79,12 +79,11 @@ def GenreModel(input_shape=(288, 432, 4), classes=9):
     # flattens x after passing through convolutional layers
     X = Flatten()(X)
  
-    # CURRENTLY DOESN'T WORK FOR SOME REASON (?)
-    # turns <class 'keras.engine.keras_tensor.KerasTensor'> into <class 'keras.layers.core.Dropout'> which leads to error
     # dropout layer randomly sets input units to 0 with freq 
     # of rate at each step during training time, which helps prevent overfitting
     #   rate: fraction of the input units to drop
-    # X = Dropout(rate=0.3)
+    dropout_layer = Dropout(rate=0.3)
+    X = dropout_layer(X, training=True)
 
     # dense layer with softmax activation to output class probabilities
     X = Dense(classes, activation='softmax', name='fc' + str(classes), kernel_initializer = glorot_uniform(seed=9))(X)
@@ -112,7 +111,7 @@ softmax = nn.functional.softmax
 class Model(nn.Module):
 
     # initializer function
-    def __init__(self, input_shape=(288,432, 4), classes=9):
+    def __init__(self, input_shape=(288,432, 3), classes=9):
         super(Model, self).__init__()
         # five convolutional layers
         self.conv1 = nn.Conv2d(in_channels=input_shape[2], out_channels=8, kernel_size=3, stride=1)       

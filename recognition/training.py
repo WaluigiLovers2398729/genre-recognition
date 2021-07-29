@@ -5,6 +5,7 @@
 from tensorflow.keras.optimizers import Adam
 from .model import *
 import keras.backend as K
+import pickle
 
 def get_f1(y_true, y_pred): 
     """
@@ -24,13 +25,16 @@ def train():
     docstring
     """
     # create model
-    model = GenreModel(input_shape=(288, 432, 4), classes=9)
+    model = GenreModel(input_shape=(288, 432, 3), classes=9)
     # create optimizer
     optim = Adam(learning_rate=0.0005)
     # configure the model for training
     model.compile(optimizer = optim, loss='categorical_crossentropy', metrics=['accuracy', get_f1]) 
     # training: fits the model on data yielded batch-by-batch by a python generator
-    history = model.fit_generator(train_generator, epochs=70, validation_data=valid_generator)
+    history = model.fit_generator(train_generator, epochs=25, validation_data=valid_generator)
+    # saves history as pickle dictionary
+    with open('recognition/data/history_backup/history_dict.pkl', 'wb') as file_pi:
+        pickle.dump(history.history, file_pi)
     # return model and history
     return (model, history)
 
@@ -46,11 +50,11 @@ import torch as t
 # DATA GENERATION TO BE COMPLETED
 train_dir = "recognition/data/spectrograms/"
 train_datagen = ImageDataGenerator(rescale=1./255)
-train_generator = train_datagen.flow_from_directory(train_dir,target_size=(288,432),color_mode="rgba",class_mode='categorical',batch_size=128)
+train_generator = train_datagen.flow_from_directory(train_dir,target_size=(288,432),color_mode="rgb",class_mode='categorical',batch_size=128)
 
 validation_dir = "recognition/data/testing_data/"
 vali_datagen = ImageDataGenerator(rescale=1./255)
-vali_generator = vali_datagen.flow_from_directory(validation_dir,target_size=(288,432),color_mode='rgba',class_mode='categorical',batch_size=128)
+vali_generator = vali_datagen.flow_from_directory(validation_dir,target_size=(288,432),color_mode='rgb',class_mode='categorical',batch_size=128)
 
 # THIS PROBABLY WORKS HOPEFULLY MAYBE
 def get_f1(y_true, y_pred):
