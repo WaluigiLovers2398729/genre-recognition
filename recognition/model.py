@@ -2,11 +2,11 @@
 # Note: We're using the keras library because the streamlined functions are more optimized for
 # managing memory when dealing with the large amount of files we split from the original GTZAN dataset
 
-from keras.models import Model
-from keras.preprocessing.image import ImageDataGenerator
-from keras.layers import (Input, Dense, Activation, BatchNormalization, Flatten, Dropout,Conv2D, MaxPooling2D)
+from tensorflow.keras.models import Model
+from tensorflow.keras.initializers import glorot_uniform
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.layers import (Input, Dense, Activation, BatchNormalization, Flatten, Dropout, Conv2D, MaxPooling2D)
 
-"""
 # directory of training data (spectrograms)
 train_dir = "recognition/data/spectrograms/"
 # augments image data for batch generation
@@ -25,21 +25,21 @@ train_generator = train_datagen.flow_from_directory(train_dir, target_size=(288,
 validation_dir = "recognition/data/testing_data/"
 valid_datagen = ImageDataGenerator(rescale=1./255)
 valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=(288,432), color_mode='rgba', class_mode='categorical', batch_size=128)
-"""
 
+"""
 # use the following if testing model & training with smaller samples:
 # Note: manually copy a fraction of training/validation data to respective folders
 # NORMAL: spectrograms (5400) / testing_data (5400) / genres (600)
 # SMALLER: temp_train (540) / temp_valid (540) / genres (60)
-
 train_dir = "recognition/data/temp/temp_train/"
 train_datagen = ImageDataGenerator(rescale=1./255)
 train_generator = train_datagen.flow_from_directory(train_dir, target_size=(288,432), color_mode="rgba", class_mode='categorical', batch_size=128)
 validation_dir = "recognition/data/temp/temp_valid/"
 valid_datagen = ImageDataGenerator(rescale=1./255)
 valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=(288,432), color_mode='rgba', class_mode='categorical', batch_size=128)
+"""
 
-def GenreModel(input_shape = (288, 432, 4), classes=9):
+def GenreModel(input_shape=(288, 432, 4), classes=9):
 
     """
     docstring
@@ -79,14 +79,16 @@ def GenreModel(input_shape = (288, 432, 4), classes=9):
 
     # flattens x after passing through convolutional layers
     X = Flatten()(X)
-    
+ 
+    # CURRENTLY DOESN'T WORK FOR SOME REASON (?)
+    # turns <class 'keras.engine.keras_tensor.KerasTensor'> into <class 'keras.layers.core.Dropout'> which leads to error
     # dropout layer randomly sets input units to 0 with freq 
     # of rate at each step during training time, which helps prevent overfitting
     #   rate: fraction of the input units to drop
-    X = Dropout(rate=0.3)
+    # X = Dropout(rate=0.3)
 
     # dense layer with softmax activation to output class probabilities
-    X = Dense(classes, activation='softmax', name='fc'+str(classes))(X)
+    X = Dense(classes, activation='softmax', name='fc' + str(classes), kernel_initializer = glorot_uniform(seed=9))(X)
 
     # groups layers into an object with both training and inference features
     model = Model(inputs=X_input, outputs=X, name='GenreModel')
@@ -106,11 +108,12 @@ softmax = nn.functional.softmax
 
 #might not work on shape (1,288,432,4)
 
+#might not work on shape (1,288,432,4)
+
 class Model(nn.Module):
 
     # initializer function
     def __init__(self, input_shape=(288,432, 4), classes=9):
-        docstring
         super(Model, self).__init__()
         # five convolutional layers
         self.conv1 = nn.Conv2d(in_channels=input_shape[2], out_channels=8, kernel_size=3, stride=1)       
@@ -126,7 +129,7 @@ class Model(nn.Module):
 
         self.batchnorm = nn.BatchNorm2d
 
-        for m in (self.conv1, self.conv2, self.conv3, self.conv4, self.final_dense):   #converts from default weight normalization to glorot(xavier)
+        for m in (self.conv1, self.conv2, self.conv3, self.conv4, self.conv5, self.final_dense):   #converts from default weight normalization to glorot(xavier)
             nn.init.constant_(m.bias,0)
             nn.init.xavier_normal_(m.weight, np.sqrt(2))
 
@@ -149,32 +152,14 @@ class Model(nn.Module):
         x = relu(self.conv4(x))
         x = self.pool(x)
         x = self.batchnorm(x)
-
-#input shape may be wrong, will have to check spectrogram data
-def model_func(input_shape = (288, 432,4), classes = 10):
-   input_x =  torch.tensor(input_shape)
+        
         x = relu(self.conv5(x))
         x = self.pool(x)
         x = self.batchnorm(x)
-
-   #first convolution
-   x = relu(nn.Conv2d(in_channels = 3, out_channels = 8, kernel_size = 3, stride = 1))
-   pool = nn.MaxPool2d(2)
-   x  = pool(x)
-        x = x.flatten()            #dropout is used to help prevent overfitting - it randomly sets inputs to 0 and scales everything up so that the total sum doesn't change
+        
+        x = x.flatten()
         x = self.dropout(x)
-
-   x = relu(nn.Conv2d(in_channels = 8, out_channels = 16, kernel_size = 3, stride = 1))
-   pool = nn.MaxPool2d(2)
-   x  = pool(x)
-        x = softmax(self.final_dense(x))  #converts to final 9 frequency scores
-
-   x = relu(nn.Conv2d(in_channels = 16, out_channels = 32, kernel_size = 3, stride = 1))
-   pool = nn.MaxPool2d(2)
-   x  = pool(x)
-        return x 
-
-   x = relu(nn.Conv2d(in_channels = 32, out_channels = 64, kernel_size = 3, stride = 1))
-   pool = nn.MaxPool2d(2)
-   x  = pool(x) 
+        x = softmax(self.final_dense(x))
+        
+        return x
 """

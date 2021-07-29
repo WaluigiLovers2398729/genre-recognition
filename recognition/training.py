@@ -2,7 +2,7 @@
 # Note: Will most likely have to plot loss and accuracy after
 # code since live noggin plots can't be used with this keras setup
 
-from keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam
 from .model import *
 import keras.backend as K
 
@@ -31,7 +31,8 @@ def train():
     model.compile(optimizer = optim, loss='categorical_crossentropy', metrics=['accuracy', get_f1]) 
     # training: fits the model on data yielded batch-by-batch by a python generator
     history = model.fit_generator(train_generator, epochs=70, validation_data=valid_generator)
-    return history
+    # return model and history
+    return (model, history)
 
 """
 ALTERNATIVE CODE (PYTORCH)
@@ -70,7 +71,7 @@ def get_f1(y_true, y_pred):
 #normal accuracy
 def accuracy(predictions, truthdata):
     Returns the mean classification accuracy for a batch of predictions.
-    
+    ''''
     Parameters
     ----------
     predictions : Union[numpy.ndarray, mg.Tensor], shape=(M, D)
@@ -82,11 +83,12 @@ def accuracy(predictions, truthdata):
     Returns
     -------
     float
-    
+    '''''
     truth = []
     for i in truthdata:
-       truth.append(np.argmax(i)) 
+        truth.append(np.argmax(i)) 
     return np.mean(np.argmax(predictions, axis=1) == truth) # <COGLINE>
+
 
 # TRAINING SETUP
 model = Model()
@@ -119,17 +121,16 @@ for epoch_cnt in range(epochs):
         # back-propagate through your computational graph through your loss
         loss.backward()
 
-optim = Adam(learning_rate = 0.0005)
         # execute gradient descent by calling step() of optim
         optim.step()
 
         # compute the accuracy between the prediction and the truth 
-        acc = get_f1(labels, prediction)
+        acc = accuracy(labels, prediction)
 
         # set the training loss and accuracy
-        '''plotter.set_train_batch({"loss" : loss.item(),
+        plotter.set_train_batch({"loss" : loss.item(),
                                  "accuracy" : acc},
-                                 batch_size=batch_size)'''
+                                 batch_size=batch_size)
 
     # Here, we evaluate our model on batches of *testing* data
     # this will show us how good our model does on data that 
@@ -158,28 +159,11 @@ optim = Adam(learning_rate = 0.0005)
 plotter.plot()
 
 ...
-one_hots = {"blues":[1,0,0,0,0,0,0,0,0], "classical":[0,1,0,0,0,0,0,0,0], "country":[0,0,1,0,0,0,0,0,0], "disco":[0,0,0,1,0,0,0,0,0], "hiphop":[0,0,0,0,1,0,0,0,0], "metal":[0,0,0,0,0,1,0,0,0], "metal":[0,0,0,0,0,1,0,0,0], "pop":[0,0,0,0,0,0,1,0,0], "reggae":[0,0,0,0,0,0,0,1,0],"rock":[0,0,0,0,0,0,0,0,1]}
-
-#read in complete labels list here
-
-onehotslist = []
-for label in labels_list:
-    onehotslist.append(one_hots[label]) 
-
-split = int(len(labels)*0.5)
-
-y_train = onehotslist[:split]
-y_test = onehotslist[split:]
-
+one_hots = {"blues":[1,0,0,0,0,0,0,0,0], "classical":[0,1,0,0,0,0,0,0,0], "country":[0,0,1,0,0,0,0,0,0], "disco":[0,0,0,1,0,0,0,0,0], "hiphop":[0,0,0,0,1,0,0,0,0], "metal":[0,0,0,0,0,1,0,0,0], "pop":[0,0,0,0,0,0,1,0,0], "reggae":[0,0,0,0,0,0,0,1,0],"rock":[0,0,0,0,0,0,0,0,1]}
 
 #how to get the array of img data (hopefully) - all images are same dimensions so should work
 
-from pathlib import Path
-from PIL import Image
-import os, shutil
-from os import listdir
-
-images_dir = Path('C:\\Users\\HP\\Desktop\\XXXXXXXXXXXXXXXXX\\images').expanduser()
+images_dir = Path(r"C:\Users\g_bab\Downloads\genre-recognition\spectrograms").expanduser()
 
 X_image_array=[]
 for fname in listdir(images_dir):
@@ -193,7 +177,34 @@ for x in range(len(X_image_array)):
     x_data.append(X_image)
 np.stack(x_data)                                                    #will output a shape (A, B, C, D)  - A: number of images, B:len, C: width, D:color channels 
 
+split = int(len(x_data)*0.5)
+
 x_train = x_data[:split]       #train/test split
 x_test = x_data[split:]
+
+#read in complete labels list here
+labelslist = []
+for i in range(600):
+    labelslist.append(one_hots["blues"])
+for j in range(600):
+    labelslist.append(one_hots["classical"])
+for j in range(600):
+    labelslist.append(one_hots["country"])
+for j in range(600):
+    labelslist.append(one_hots["disco"])
+for j in range(600):
+    labelslist.append(one_hots["hiphop"])
+for j in range(600):
+    labelslist.append(one_hots["metal"])
+for j in range(600):
+    labelslist.append(one_hots["pop"])
+for j in range(600):
+    labelslist.append(one_hots["reggae"])
+for j in range(600):
+    labelslist.append(one_hots["rock"])
+print(labelslist[:20])
+
+y_train = labelslist[:split]
+y_test = labelslist[split:]
 
 """

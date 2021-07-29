@@ -6,20 +6,20 @@
 # Note: A 1 GB dataset is too big to save in the git repository both before and after processing
 # the data, so we're storing it locally on our own computers while working on this step
 
-# Git doesn't allow the saving of empty folders so manually set them up like this:
+# Put Google Drive folders into the project folder like this:
+# genre-recognition
 # --recognition
 # ----data
 # ------audiosamples
 # ------raw
 # ------spectrograms
 # ------testing_data
+# ------query
+# ------temp (you actually don't need this)
 
 # Note: If processing runs into an error, remember to delete files to try again
 
 # Note: Jazz files in the GTZAN dataset seem to have a running issue, leaving out for now
-
-# Note: Processing takes a really long time to run but the sample size will help boost our accuracy,
-# I'll upload the files to a cloud drive once they finish loading so others can test
 
 # Note: Spectrogram step works much faster at the beginning of the function and progressively slows down,
 # converting a single genre at a time before restarting the kernel and repeating is the current best way
@@ -107,7 +107,7 @@ def to_mel_spectrograms():
     None
     """
     # iterate through genres
-    for g in ('rock',): # REMEMBER TO CHANGE BACK TO ALL GENRES
+    for g in genres:
         i = 0
         # print current genre
         print(g)
