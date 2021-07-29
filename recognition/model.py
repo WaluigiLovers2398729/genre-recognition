@@ -40,7 +40,6 @@ valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=
 """
 
 def GenreModel(input_shape=(288, 432, 4), classes=9):
-
     """
     docstring
     """

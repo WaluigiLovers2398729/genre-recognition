@@ -163,7 +163,7 @@ one_hots = {"blues":[1,0,0,0,0,0,0,0,0], "classical":[0,1,0,0,0,0,0,0,0], "count
 
 #how to get the array of img data (hopefully) - all images are same dimensions so should work
 
-images_dir = Path(r"C:\Users\g_bab\Downloads\genre-recognition\spectrograms").expanduser()
+images_dir = Path(r"C:/Users/g_bab/Downloads/genre-recognition/spectrograms").expanduser()
 
 X_image_array=[]
 for fname in listdir(images_dir):
