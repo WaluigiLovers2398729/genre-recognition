@@ -24,6 +24,7 @@
 # Note: Spectrogram step works much faster at the beginning of the function and progressively slows down,
 # converting a single genre at a time before restarting the kernel and repeating is the current best way
 
+from PIL import Image
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from pydub import AudioSegment
 import matplotlib.pyplot as plt
@@ -160,4 +161,21 @@ def create_sets():
         for f in test_files:
             # move them into testing_data
             shutil.move(directory + f"{g}"+ "/" + f, "recognition/data/testing_data/" + f"{g}")
-        
+
+def crop_axes():
+    """
+    docstring
+    """
+    for g in genres:
+
+        print("Cropping Training Data: " + str(g))
+        for filename in os.listdir(os.path.join(f"recognition/data/spectrograms/", f"{g}")):
+            im = Image.open(os.path.join(f"recognition/data/spectrograms/{g}", f"{filename}"))
+            cropped = im.crop((55, 45, 388, 241))
+            cropped.save(os.path.join(f"recognition/data/spectrograms/{g}", f"{filename}"))
+
+        print("Cropping Validation Data: " + str(g))
+        for filename in os.listdir(os.path.join(f"recognition/data/testing_data/", f"{g}")):
+            im = Image.open(os.path.join(f"recognition/data/testing_data/{g}", f"{filename}"))
+            cropped = im.crop((55, 45, 388, 241))
+            cropped.save(os.path.join(f"recognition/data/testing_data/{g}", f"{filename}"))

@@ -12,7 +12,7 @@ import numpy as np
 import librosa
 import os
 
-def process_query(model, filename):
+def process_query(trained_model, filename):
     """
     docstring
     """
@@ -42,7 +42,7 @@ def process_query(model, filename):
     # reshapes to the same dimensions & color channels of those from training   
     image_arr = np.reshape(image_arr,(1, 288, 432, 3)) 
     # uses GenreModel to make prediction, /255 scales rgb coefficients down for the model
-    predictions = model.predict(image_arr/255)
+    predictions = trained_model.predict(image_arr/255)
     # reshape predictions into 9 genre frequencies
     predictions = predictions.reshape((9,)) 
     # gets respective labels for predictions

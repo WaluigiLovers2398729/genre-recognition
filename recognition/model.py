@@ -26,19 +26,6 @@ validation_dir = "recognition/data/testing_data/"
 valid_datagen = ImageDataGenerator(rescale=1./255)
 valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=(288,432), color_mode='rgb', class_mode='categorical', batch_size=128)
 
-"""
-# use the following if testing model & training with smaller samples:
-# Note: manually copy a fraction of training/validation data to respective folders
-# NORMAL: spectrograms (5400) / testing_data (5400) / genres (600)
-# SMALLER: temp_train (540) / temp_valid (540) / genres (60)
-train_dir = "recognition/data/temp/temp_train/"
-train_datagen = ImageDataGenerator(rescale=1./255)
-train_generator = train_datagen.flow_from_directory(train_dir, target_size=(288,432), color_mode="rgb", class_mode='categorical', batch_size=128)
-validation_dir = "recognition/data/temp/temp_valid/"
-valid_datagen = ImageDataGenerator(rescale=1./255)
-valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=(288,432), color_mode='rgb', class_mode='categorical', batch_size=128)
-"""
-
 def GenreModel(input_shape=(288, 432, 3), classes=9):
     """
     docstring

@@ -2,6 +2,10 @@
 # Note: Will most likely have to plot loss and accuracy after
 # code since live noggin plots can't be used with this keras setup
 
+# (EPOCHS) 25
+# (BATCH-SIZE) 128
+# (LEARNING RATE) 0.0005
+
 from tensorflow.keras.optimizers import Adam
 from .model import *
 import keras.backend as K
