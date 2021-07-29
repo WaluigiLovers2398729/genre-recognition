@@ -35,7 +35,7 @@ def train():
     # configure the model for training
     model.compile(optimizer = optim, loss='categorical_crossentropy', metrics=['accuracy', get_f1]) 
     # training: fits the model on data yielded batch-by-batch by a python generator
-    history = model.fit_generator(train_generator, epochs=25, validation_data=valid_generator)
+    history = model.fit_generator(train_generator, epochs=30, validation_data=valid_generator)
     # saves history as pickle dictionary
     with open('recognition/data/history_backup/history_dict.pkl', 'wb') as file_pi:
         pickle.dump(history.history, file_pi)

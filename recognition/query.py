@@ -16,11 +16,13 @@ def process_query(trained_model, filename):
     """
     docstring
     """
-    # extract relevant data from original audio file
+ 
+    # extract relevant data from original audio file (crops start/finish for silence)
     sound = AudioSegment.from_wav(os.path.join("recognition/data/query/", f"{filename}.wav"))
     sound = sound[1000*40:1000*50]
     temp_filename = str(filename) + "_extracted"
     sound.export(f"recognition/data/query/{temp_filename}.wav", format='wav')
+
     # load in 5 seconds of audio for this sound file
     y, sr = librosa.load(f"recognition/data/query/{temp_filename}.wav", duration=5)
     # use time-series and sampling-rate to get mel-spectrogram as np array
