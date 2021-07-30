@@ -12,11 +12,9 @@ import numpy as np
 import librosa
 import os
 
+# <<< VERSION ONE >>> (PNGS)
+"""
 def process_query(trained_model, filename):
-    """
-    docstring
-    """
- 
     # extract relevant data from original audio file (crops start/finish for silence)
     sound = AudioSegment.from_wav(os.path.join("recognition/data/query/", f"{filename}.wav"))
     sound = sound[1000*40:1000*50]
@@ -51,5 +49,24 @@ def process_query(trained_model, filename):
     best_prediction = np.argmax(predictions)
     # return labels and predictions for plotting
     return best_prediction, predictions
+"""
 
-    
+# <<< VERSION TWO >>> (ARRAYS)
+def process_query(trained_model, filename):
+    # load in 5 seconds of audio for this sound file
+    y, sr = librosa.load(f"recognition/data/query/{filename}.wav", duration=5)
+    # use time-series and sampling-rate to get mel-spectrogram as np array
+    mels = librosa.feature.melspectrogram(y=y, sr=sr)
+    # convert power spectrogram to decibel units using mel-spectrogram and reference 
+    # value (scales amplitude to max in mels), saves to directory as .npy
+    p = (librosa.power_to_db(mels, ref=np.max))
+    # reshapes to the same dimensions & color channels of those from training   
+    p = np.reshape(p, (1, 128, 216, 1)) 
+    # uses GenreModel to make prediction, /255 scales rgb coefficients down for the model
+    predictions = trained_model.predict(p)
+    # reshape predictions into 9 genre frequencies
+    predictions = predictions.reshape((9,)) 
+    # gets respective labels for predictions
+    best_prediction = np.argmax(predictions)
+    # return labels and predictions for plotting
+    return best_prediction, predictions

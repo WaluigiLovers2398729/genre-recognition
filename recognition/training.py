@@ -3,13 +3,39 @@
 # code since live noggin plots can't be used with this keras setup
 
 # (EPOCHS) 25
-# (BATCH-SIZE) 128
-# (LEARNING RATE) 0.0005
+# (BATCH-SIZE) 100
+# (LEARNING RATE) 0.001
 
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow import convert_to_tensor
 from .model import *
 import keras.backend as K
+import numpy as np
 import pickle
+import os
+genres = ('blues', 'classical', 'country', 'disco', 'hiphop', 'metal', 'pop', 'reggae', 'rock')
+
+# <<< VERSION ONE >>> (PNGS)
+"""
+# directory of training data (spectrograms)
+train_dir = "recognition/data/spectrograms/"
+# augments image data for batch generation
+#   rescale: scales rgb images data down so model can process
+train_datagen = ImageDataGenerator(rescale=1./255)
+# navigates to directory and generates batches of augmented data
+#   target_size: dimensions to resize images (288, 432)
+#   color_mode: color channels of images (rgb is 4 channels)
+#   class_mode: type of label arrays returned (categorical is 2D one-hot encoded labels)
+#   batch_size: size of batches of data (100)
+# returns iterable yielding tuples of (x, y), where x is np array containing 
+# batch of images and y is np array containing respective batch of labels
+train_generator = train_datagen.flow_from_directory(train_dir, target_size=(288,432), color_mode="rgb", class_mode='categorical', batch_size=100)
+# repeat same process for validation data (testing_data)
+validation_dir = "recognition/data/testing_data/"
+valid_datagen = ImageDataGenerator(rescale=1./255)
+valid_generator = valid_datagen.flow_from_directory(validation_dir, target_size=(288,432), color_mode='rgb', class_mode='categorical', batch_size=100)
+"""
 
 def get_f1(y_true, y_pred): 
     """
@@ -24,195 +50,90 @@ def get_f1(y_true, y_pred):
     f1_val = 2 * (precision*recall) / (precision+recall+K.epsilon())
     return f1_val
 
+# <<< VERSION ONE >>> (PNGS)
+"""
 def train():
-    """
-    docstring
-    """
     # create model
     model = GenreModel(input_shape=(288, 432, 3), classes=9)
     # create optimizer
-    optim = Adam(learning_rate=0.0005)
+    optim = Adam(learning_rate=0.001)
     # configure the model for training
     model.compile(optimizer = optim, loss='categorical_crossentropy', metrics=['accuracy', get_f1]) 
     # training: fits the model on data yielded batch-by-batch by a python generator
-    history = model.fit_generator(train_generator, epochs=30, validation_data=valid_generator)
+    history = model.fit_generator(train_generator, epochs=100, validation_data=valid_generator)
     # saves history as pickle dictionary
     with open('recognition/data/history_backup/history_dict.pkl', 'wb') as file_pi:
         pickle.dump(history.history, file_pi)
     # return model and history
     return (model, history)
-
 """
-ALTERNATIVE CODE (PYTORCH)
---------------------------
 
-from .model import *
-import torch.nn.functional.cross_entropy
-import torch.optim.Adam
-import torch as t
-
-# DATA GENERATION TO BE COMPLETED
-train_dir = "recognition/data/spectrograms/"
-train_datagen = ImageDataGenerator(rescale=1./255)
-train_generator = train_datagen.flow_from_directory(train_dir,target_size=(288,432),color_mode="rgb",class_mode='categorical',batch_size=128)
-
-validation_dir = "recognition/data/testing_data/"
-vali_datagen = ImageDataGenerator(rescale=1./255)
-vali_generator = vali_datagen.flow_from_directory(validation_dir,target_size=(288,432),color_mode='rgb',class_mode='categorical',batch_size=128)
-
-# THIS PROBABLY WORKS HOPEFULLY MAYBE
-def get_f1(y_true, y_pred):
-    Returns the f1 distance between two input tensors
-@@ -17,6 +31,99 @@ def get_f1(y_true, y_pred):
-    float: 
-        F1 distance between y_true and y_pred
-    true_positive = torch.sum()
-    # pathway for computing f1-score given truth and prediction, essentially "accuracy"
-    true_positives = t.sum(t.round(t.clip(y_true * y_pred, 0, 1)))
-    possible_positives = t.sum(t.round(t.clip(y_true, 0, 1)))
-    predicted_positives = t.sum(t.round(t.clip(y_pred, 0, 1)))
-    precision = true_positives / (predicted_positives+1e-07)
-    recall = true_positives / (possible_positives+1e-07)
-    f1_val = 2 * (precision*recall) / (precision+recall+1e-07)
-    return f1_val
-
-#normal accuracy
-def accuracy(predictions, truthdata):
-    Returns the mean classification accuracy for a batch of predictions.
-    ''''
-    Parameters
-    ----------
-    predictions : Union[numpy.ndarray, mg.Tensor], shape=(M, D)
-        The scores for D classes, for a batch of M data points
-    truth : numpy.ndarray, shape=(M,)
-        The true labels for each datum in the batch: each label is an
-        integer in [0, D)
+# <<< VERSION TWO >>> (ARRAYS)
+def train():
+    one_hots = {"blues":[1,0,0,0,0,0,0,0,0], "classical":[0,1,0,0,0,0,0,0,0], 
+            "country":[0,0,1,0,0,0,0,0,0], "disco":[0,0,0,1,0,0,0,0,0], 
+            "hiphop":[0,0,0,0,1,0,0,0,0], "metal":[0,0,0,0,0,1,0,0,0], 
+            "pop":[0,0,0,0,0,0,1,0,0], "reggae":[0,0,0,0,0,0,0,1,0],
+            "rock":[0,0,0,0,0,0,0,0,1]}
+    x_train = []
+    y_train = []
+    x_test = []
+    y_test = []
+    for g in genres:
+        print("Training: " + str(g))
+        # iterate through the newly sliced 5400 five-second sound files
+        for filename in os.listdir(os.path.join("recognition/data/spectrograms/", f"{g}")):
+            # training data
+            filedata = np.load(f"recognition/data/spectrograms/{g}/{filename}")
+            filedata = np.resize(filedata,(128, 216))  
+            x_train.append(filedata)
+            # training labels
+            y_train.append(one_hots[g])
+        print("Validation: " + str(g))
+        # iterate through the newly sliced 5400 five-second sound files
+        for filename in os.listdir(os.path.join("recognition/data/testing_data/", f"{g}")):     
+            # testing data
+            filedata = np.load(f"recognition/data/testing_data/{g}/{filename}")
+            filedata = np.resize(filedata,(128, 216))  
+            x_test.append(filedata)
+            # testing labels
+            y_test.append(one_hots[g])
+    #x_train = np.concatenate([x_train[i] for i in range(len(x_train))])  
+    print(len(x_train))
+    x_train = np.array(x_train)
+    print(x_train.shape)
+    y_train = np.array(y_train)
+    print(y_train)
+    print(len(x_train))
+    x_test = np.array(x_test)
+    print(x_train.shape)
+    y_test = np.array(y_test)
+    print(y_train)
+    validation_data=(x_test, y_test)
+    #x_train = np.array(x_train)
+    #y_train = np.array(y_train)
+    #x_test = np.array(x_test)
+    #y_test = np.array(y_test)
+    #x_train = convert_to_tensor(x_train)
+    #y_train = convert_to_tensor(y_train)
+    #x_test = convert_to_tensor(x_test)
+    #y_test = convert_to_tensor(y_test)
     
-    Returns
-    -------
-    float
-    '''''
-    truth = []
-    for i in truthdata:
-        truth.append(np.argmax(i)) 
-    return np.mean(np.argmax(predictions, axis=1) == truth) # <COGLINE>
-
-
-# TRAINING SETUP
-model = Model()
-optim = Adam(learning_rate=0.00005)
-batch_size = 100
-epochs = 20                      #recommended 70
-
-
-for epoch_cnt in range(epochs):
-    idxs = np.arange(len(x_train))  # -> array([0, 1, ..., 9999])
-    np.random.shuffle(idxs)  
-
-    for batch_cnt in range(len(x_train)//batch_size):
-        batch_indices = idxs[batch_cnt*batch_size : (batch_cnt + 1)*batch_size]
-        batch = x_train[batch_indices]  # random batch of our training data
-
-        spectrograms, labels = batch   #may be reversed based on how x_train is formatted
-
-        optim.zero_grad()  #pytorch accumulates gradients
-
-        # compute the predictions for this batch by calling on model
-        prediction = model(spectrograms)
-
-        # compute the true (a.k.a desired) values for this batch: 
-        #truth = y_train[batch_indices]
-
-        # compute the loss associated with our predictions(use softmax_cross_entropy)
-        loss = cross_entropy(prediction, labels) 
-
-        # back-propagate through your computational graph through your loss
-        loss.backward()
-
-        # execute gradient descent by calling step() of optim
-        optim.step()
-
-        # compute the accuracy between the prediction and the truth 
-        acc = accuracy(labels, prediction)
-
-        # set the training loss and accuracy
-        plotter.set_train_batch({"loss" : loss.item(),
-                                 "accuracy" : acc},
-                                 batch_size=batch_size)
-
-    # Here, we evaluate our model on batches of *testing* data
-    # this will show us how good our model does on data that 
-    # it has never encountered
-    # Iterate over batches of *testing* data
-    for batch_cnt in range(0, len(x_test)//batch_size):
-        idxs = np.arange(len(x_test))
-        batch_indices = idxs[batch_cnt*batch_size : (batch_cnt + 1)*batch_size]
-        batch = x_test[batch_indices] 
-
-        with mg.no_autodiff:
-            # get your model's prediction on the test-batch
-            prediction = model(batch)
-
-            # get the truth values for that test-batch
-            truth = y_test[batch_indices]
-
-            # compute the test accuracy
-            acc = accuracy(prediction, truth)
-
-        # log the test-accuracy in noggin
-        plotter.set_test_batch({"accuracy": acc}, batch_size=batch_size)
-
-    plotter.set_train_epoch()
-    plotter.set_test_epoch()
-plotter.plot()
-
-...
-one_hots = {"blues":[1,0,0,0,0,0,0,0,0], "classical":[0,1,0,0,0,0,0,0,0], "country":[0,0,1,0,0,0,0,0,0], "disco":[0,0,0,1,0,0,0,0,0], "hiphop":[0,0,0,0,1,0,0,0,0], "metal":[0,0,0,0,0,1,0,0,0], "pop":[0,0,0,0,0,0,1,0,0], "reggae":[0,0,0,0,0,0,0,1,0],"rock":[0,0,0,0,0,0,0,0,1]}
-
-#how to get the array of img data (hopefully) - all images are same dimensions so should work
-
-images_dir = Path(r"C:/Users/g_bab/Downloads/genre-recognition/spectrograms").expanduser()
-
-X_image_array=[]
-for fname in listdir(images_dir):
-    fpath = os.path.join(images_dir, fname)
-    im = Image.open(fpath)
-    X_image_array.append(im)
-
-x_data = []
-for x in range(len(X_image_array)):
-    X_image=np.array(X_image_array[x],dtype='uint8')
-    x_data.append(X_image)
-np.stack(x_data)                                                    #will output a shape (A, B, C, D)  - A: number of images, B:len, C: width, D:color channels 
-
-split = int(len(x_data)*0.5)
-
-x_train = x_data[:split]       #train/test split
-x_test = x_data[split:]
-
-#read in complete labels list here
-labelslist = []
-for i in range(600):
-    labelslist.append(one_hots["blues"])
-for j in range(600):
-    labelslist.append(one_hots["classical"])
-for j in range(600):
-    labelslist.append(one_hots["country"])
-for j in range(600):
-    labelslist.append(one_hots["disco"])
-for j in range(600):
-    labelslist.append(one_hots["hiphop"])
-for j in range(600):
-    labelslist.append(one_hots["metal"])
-for j in range(600):
-    labelslist.append(one_hots["pop"])
-for j in range(600):
-    labelslist.append(one_hots["reggae"])
-for j in range(600):
-    labelslist.append(one_hots["rock"])
-print(labelslist[:20])
-
-y_train = labelslist[:split]
-y_test = labelslist[split:]
-
-"""
+    # create model
+    model = GenreModel(input_shape=(128, 216, 1), classes=9)
+    # create optimizer
+    optim = Adam(learning_rate=0.001)
+    # configure the model for training
+    model.compile(optimizer=optim, loss='categorical_crossentropy', metrics=['accuracy', get_f1]) 
+    # training: fits the model on data yielded batch-by-batch by a python generator
+    print(type(x_train))
+    print(type(y_train))
+    print(type(x_test))
+    print(type(y_test))
+    print(type(validation_data))
+    history = model.fit(x_train, y_train, batch_size=100, epochs=25, validation_data=validation_data)
+    # saves history as pickle dictionary
+    with open('recognition/data/history_backup/history_dict.pkl', 'wb') as file_pi:
+        pickle.dump(history.history, file_pi)
+    # return model and history
+    return (model, history)

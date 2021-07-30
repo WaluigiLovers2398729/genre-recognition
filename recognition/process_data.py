@@ -121,6 +121,9 @@ def to_mel_spectrograms():
             y, sr = librosa.load(song, duration=5)
             # use time-series and sampling-rate to get mel-spectrogram as np array
             mels = librosa.feature.melspectrogram(y=y, sr=sr)
+
+            # <<< VERSION ONE >>> (PNGS)
+            """
             # creates a new "Figure" (for displaying data)
             fig = plt.Figure()
             # manually attach a "Canvas" to the "Figure" (for displaying data)
@@ -128,8 +131,15 @@ def to_mel_spectrograms():
             # convert power spectrogram to decibel units using mel-spectrogram and reference 
             # value (scales amplitude to max in mels), then displays data
             p = plt.imshow(librosa.power_to_db(mels, ref=np.max))
-            # save to directory as png after figure is displayed
+            save to directory as png after figure is displayed
             plt.savefig(f"recognition/data/spectrograms/{g}/{g+str(i)}.png")
+            """
+
+            # <<< VERSION TWO >>> (ARRAYS)
+            # convert power spectrogram to decibel units using mel-spectrogram and reference 
+            # value (scales amplitude to max in mels), saves to directory as .npy
+            p = (librosa.power_to_db(mels, ref=np.max))
+            np.save(f"recognition/data/spectrograms/{g}/{g+str(i)}", p)
 
 def create_sets():
     """
